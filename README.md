@@ -35,10 +35,19 @@ For the MIMIC-CDM-Full Information task, executed through **run_full_info.py**, 
 - only_abnormal_labs: Provide only those lab results that are abnormal.
 - bin_lab_results_abnormal: If only abnormal labs are provided, also bin them
 
+## Other
+
 Housekeeping arguments are:
 - seed: The seed used for greedy decoding
 - local_logging: If logs should be saved locally
 - run_descr: An extra name to give to the run
 - first_patient: Start executing at a specific patient
 - patient_list_path: Run on only a select group of patients (given as a list of hadm_ids)
+
+To run the code, start with a fresh python 3.10 installation using the package manager of your choice and then run 
+
+```
+pip3 install torch torchvision torchaudio
+pip install transformers spacy auto-gptq langsmith langchain[llms] optimum thefuzz scispacy loguru hydra-core --upgrade negspacy openai nltk exllamav2 tiktoken paramiko seaborn https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_lg-0.5.1.tar.gz
+```
   
