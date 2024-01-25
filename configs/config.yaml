@@ -1,0 +1,33 @@
+defaults:
+  - _self_
+  - paths: server 
+  - model: WizardLM70B
+
+pathology: appendicitis
+agent: ZeroShot
+prompt_template: VANILLA
+summarize: True
+fewshot: False
+include_ref_range: False
+bin_lab_results: False
+bin_lab_results_abnormal: False
+provide_diagnostic_criteria: False
+include_tool_use_examples: False
+abbreviated: True
+self_consistency: False
+only_abnormal_labs: False
+
+seed: 2023
+local_logging: True
+run_descr:
+
+first_patient:
+patient_list_path:
+
+order: pli
+diagnostic_criteria:
+
+rr_name: RR
+diag_crit_writer_openai_api_key:
+confirm_diagnosis: False
+save_probabilities: False

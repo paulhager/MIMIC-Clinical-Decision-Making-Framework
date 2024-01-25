@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - _self_
+
+base_mimic:
+base_models:
+lab_test_mapping_path:
+local_logging_dir:
+diagnostic_criteria_path:

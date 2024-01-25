@@ -1,0 +1,17 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+model_name: axiong/PMC_LLaMA_13B
+max_context_length: 2048
+exllama: False
+
+system_tag_start: ""
+system_tag_end: ""
+
+user_tag_start: ""
+user_tag_end: ""
+
+ai_tag_start: ""
+ai_tag_end: ""

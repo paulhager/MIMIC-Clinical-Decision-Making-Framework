@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+model_name: WizardLM-70B-V1.0-GPTQ
+max_context_length: 4096
+exllama: True
+
+user_tag_start: " USER: "
+user_tag_end: ""
+
+system_tag_start: ""
+system_tag_end: ""
+
+ai_tag_start: " ASSISTANT: "
+ai_tag_end: "</s>"
+
+stop_words:
+ - "USER:"
+ - "ASSISTANT:"

@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+model_name: Llama-2-70B-chat-GPTQ
+max_context_length: 4096
+exllama: True
+
+system_tag_start: "<s>[INST] <<SYS>>\n"
+system_tag_end: "\n<</SYS>>\n\n"
+
+user_tag_start: ""
+user_tag_end: " [/INST] "
+
+ai_tag_start: ""
+ai_tag_end: " </s><s>[INST] "
+
+stop_words:
+ - "[INST]"
+ - "[/INST]"
