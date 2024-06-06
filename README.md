@@ -6,7 +6,7 @@ The code to create the dataset is found at: https://github.com/paulhager/MIMIC-C
 
 The dataset is based on the MIMIC-IV database. Access can be requested here: https://physionet.org/content/mimiciv/2.2/
 
-A pre-processed version of the dataset is currently under review by Physionet.
+A pre-processed version of the dataset is found here: https://physionet.org/content/mimic-iv-ext-cdm/1.0/
 
 ## MIMIC CDM
 
