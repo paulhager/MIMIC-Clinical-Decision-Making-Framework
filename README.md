@@ -6,7 +6,7 @@ The code to create the dataset is found at: https://github.com/paulhager/MIMIC-C
 
 The dataset is based on the MIMIC-IV database. Access can be requested here: https://physionet.org/content/mimiciv/2.2/
 
-A pre-processed version of the dataset is found here: https://physionet.org/content/mimic-iv-ext-cdm/1.0/
+A pre-processed version of the dataset is found here: https://physionet.org/content/mimic-iv-ext-cdm/
 
 ## MIMIC CDM
 
@@ -46,9 +46,10 @@ Housekeeping arguments are:
 
 ## Environment
 
-To setup the environment, create a new virtual environment of your choosing and then run 
+To setup the environment, create a new virtual environment of your choosing with python=3.10, export your CUDA_HOME path to whatever version CUDA you have (does not have to be 11.7.1 like in the example) and then install the libraries from requirements.txt:
 
 ```
+export CUDA_HOME=.../cuda/cuda_11.7.1
 pip install --no-deps -r requirements.txt
 ```
   
