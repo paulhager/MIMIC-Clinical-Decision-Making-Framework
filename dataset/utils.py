@@ -33,17 +33,14 @@ def last_substring_index(larger_string, substring):
 
 # Write fields as csv with $ separator
 def write_hadm_to_file(hadm_info, filename, base_mimic=""):
-    base_hosp = join(base_mimic, "hosp")
-
     # Write pickle for easy loading
-    with open(join(base_hosp, filename + ".pkl"), "wb") as f:
+    with open(join(base_mimic, filename + ".pkl"), "wb") as f:
         pickle.dump(hadm_info, f)
 
 
 # Load from pickle
 def load_hadm_from_file(filename, base_mimic=""):
-    base_hosp = join(base_mimic, "hosp")
-    with open(join(base_hosp, filename + ".pkl"), "rb") as f:
+    with open(join(base_mimic, filename + ".pkl"), "rb") as f:
         hadm_info = pickle.load(f)
     return hadm_info
 

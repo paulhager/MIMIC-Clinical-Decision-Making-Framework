@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - paths: server 
+  - paths: example 
   - model: WizardLM70B
 
 pathology: appendicitis
