@@ -1,5 +1,7 @@
 # MIMIC Clinical Decision Making Framework
 
+**🔥 New Addition: Llama 3 has been added to the leaderboard! 🔥**
+
 This repository contains the code for running the clinical decision making task using the MIMIC CDM dataset.
 
 The code to create the dataset is found at: https://github.com/paulhager/MIMIC-Clinical-Decision-Making-Dataset
