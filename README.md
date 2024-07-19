@@ -8,6 +8,8 @@ The dataset is based on the MIMIC-IV database. Access can be requested here: htt
 
 A pre-processed version of the dataset is found here: https://physionet.org/content/mimic-iv-ext-cdm/
 
+Visit https://huggingface.co/spaces/MIMIC-CDM/leaderboard to check out the current leaderboard. I will update this as new models are released. If you would like a model to be tested and put on the board, please write me an email at paul (dot) hager (at) tum (dot) de.
+
 ## MIMIC CDM
 
 This code simulates a realistic clinical environment where an LLM is provided with the history of present illness of a patient and then tasked to gather information to come to a final diagnosis and treatment plan.
