@@ -1,5 +1,9 @@
 # MIMIC Clinical Decision Making Framework
 
+**🔥 New Addition: Llama 3.1 has been added to the leaderboard! 🔥**
+
+**🔥 New Addition: OpenBio has been added to the leaderboard! 🔥**
+
 **🔥 New Addition: Llama 3 has been added to the leaderboard! 🔥**
 
 This repository contains the code for running the clinical decision making task using the MIMIC CDM dataset.
