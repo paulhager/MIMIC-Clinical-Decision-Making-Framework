@@ -1,5 +1,7 @@
 # MIMIC Clinical Decision Making Framework
 
+**🔥 New Addition: Llama 3.3 has been added to the leaderboard! 🔥**
+
 **🔥 New Addition: Llama 3.1 has been added to the leaderboard! 🔥**
 
 **🔥 New Addition: OpenBio has been added to the leaderboard! 🔥**
