@@ -11,7 +11,7 @@ import re
 from thefuzz import process, fuzz
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from transformers import LlamaTokenizer
+from transformers import LlamaTokenizer, AutoTokenizer
 from exllamav2 import ExLlamaV2Tokenizer
 import tiktoken
 
@@ -337,12 +337,8 @@ def calculate_num_tokens(tokenizer, inputs):
         tokens = tokenizer.encode(input)
         if isinstance(tokenizer, ExLlamaV2Tokenizer):
             num_tokens += tokens.shape[-1]
-        elif isinstance(tokenizer, LlamaTokenizer) or isinstance(
-            tokenizer, tiktoken.Encoding
-        ):
-            num_tokens += len(tokens)
         else:
-            raise ValueError("Tokenizer not supported")
+            num_tokens += len(tokens)
     return num_tokens
 
 
@@ -353,15 +349,13 @@ def truncate_text(tokenizer, input, available_tokens):
     elif isinstance(tokenizer, tiktoken.Encoding):
         truncated_input_tokens = input = tokenizer.encode(input)[:available_tokens]
         input = tokenizer.decode(truncated_input_tokens)
-    elif isinstance(tokenizer, LlamaTokenizer):
+    else:
         truncated_tokens = tokenizer.encode(
             input,
             truncation=False,
             padding=False,
         )[:available_tokens]
         input = tokenizer.decode(truncated_tokens, skip_special_tokens=True)
-    else:
-        raise ValueError("Tokenizer not supported")
     return input
 
 

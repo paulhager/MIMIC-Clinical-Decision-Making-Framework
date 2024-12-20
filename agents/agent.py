@@ -84,9 +84,7 @@ class CustomZeroShotAgent(ZeroShotAgent):
         thoughts = ""
         for action, observation in intermediate_steps:
             thoughts += action.log
-            thoughts += (
-                f"\n{self.observation_prefix}{observation.strip()}\n{self.llm_prefix} "
-            )
+            thoughts += f"{self.tags['ai_tag_end']}{self.tags['user_tag_start']}{self.observation_prefix}{observation.strip()}{self.tags['user_tag_end']}{self.tags['ai_tag_start']}{self.llm_prefix}"
         if (
             calculate_num_tokens(
                 self.llm_chain.llm.tokenizer,

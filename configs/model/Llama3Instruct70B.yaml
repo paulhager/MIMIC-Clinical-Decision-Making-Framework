@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+model_name: "meta-llama/Meta-Llama-3-70B-Instruct"
+max_context_length: 8192
+exllama: False
+
+system_tag_start: "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n"
+system_tag_end: "<|eot_id|>"
+
+user_tag_start: "<|start_header_id|>user<|end_header_id|>\n\n"
+user_tag_end: "<|eot_id|>"
+
+ai_tag_start: "<|start_header_id|>assistant<|end_header_id|>\n\n"
+ai_tag_end: "<|eot_id|>"
+
+stop_words:
+ - "<|eot_id|>"
+ - "<|end_of_text|>"

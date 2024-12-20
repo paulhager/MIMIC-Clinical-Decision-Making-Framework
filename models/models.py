@@ -125,6 +125,42 @@ class CustomLLM(LLM):
                     self.model, self.max_context_length
                 )
 
+        elif (
+            self.model_name == "meta-llama/Meta-Llama-3-70B-Instruct"
+            or self.model_name == "aaditya/OpenBioLLM-Llama3-70B"
+            or self.model_name == "meta-llama/Meta-Llama-3.1-70B-Instruct"
+            or self.model_name == "meta-llama/Llama-3.3-70B-Instruct"
+        ):
+            from transformers import (
+                AutoTokenizer,
+                AutoModelForCausalLM,
+                BitsAndBytesConfig,
+            )
+
+            print(f"loading from {base_models}")
+
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                cache_dir=base_models,
+            )
+
+            eot = "<|eot_id|>"
+            eot_id = self.tokenizer.convert_tokens_to_ids(eot)
+            self.tokenizer.pad_token = eot
+            self.tokenizer.pad_token_id = eot_id
+
+            print("loaded tokenizer")
+            bb_cfg = BitsAndBytesConfig(
+                load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                cache_dir=base_models,
+                device_map="auto",
+                quantization_config=bb_cfg,
+            )
+            print("loaded model")
+
         elif self.model_name == "axiong/PMC_LLaMA_13B":
             from transformers import LlamaTokenizer, LlamaForCausalLM
 
@@ -294,6 +330,7 @@ class CustomLLM(LLM):
                 do_sample=do_sample,
                 repetition_penalty=repetition_penalty,
                 length_penalty=length_penalty,
+                pad_token_id=self.tokenizer.pad_token_id,
                 **kwargs,
             )
 
