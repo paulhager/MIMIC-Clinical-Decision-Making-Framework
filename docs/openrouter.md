@@ -48,14 +48,22 @@ The currently configured hosted models are:
 | --- | --- | --- |
 | `Gemma4_26B_OpenRouter` | `google/gemma-4-26b-a4b-it` | DeepInfra |
 | `GPTOSS120B_OpenRouter` | `openai/gpt-oss-120b` | DeepInfra |
-| `Qwen3.5_397B_OpenRouter` | `qwen/qwen3.5-397b-a17b` | Alibaba |
+| `Qwen3.5_397B_OpenRouter` | `qwen/qwen3.5-397b-a17b` | AtlasCloud |
 | `DeepSeekV4Flash_OpenRouter` | `deepseek/deepseek-v4-flash` | DeepInfra |
 | `Llama4Maverick_OpenRouter` | `meta-llama/llama-4-maverick` | DeepInfra |
-| `MistralSmall4_OpenRouter` | `mistralai/mistral-small-2603` | Mistral |
+| `MistralSmall4_OpenRouter` | `mistralai/mistral-small-2603` | Venice |
 
 Provider fallback is disabled so a leaderboard run cannot silently switch
 inference implementations. Every config also requires supported request
-parameters and denies endpoints marked as collecting data.
+parameters and sets `zdr: true`.
+OpenRouter will therefore reject a request rather than route it to an endpoint
+that is not currently listed as Zero Data Retention.
+
+As of 2026-07-28, synthetic ZDR requests pass for Gemma 4, GPT-OSS 120B,
+Qwen 3.5 397B, DeepSeek V4 Flash, and Llama 4 Maverick. OpenRouter's ZDR
+catalog lists the Venice route for Mistral Small 4, but the router currently
+rejects that combination under the enforced data policy. Do not run Mistral
+Small 4 on benchmark data until its synthetic check passes.
 
 ## 4. Select a hosted model in the framework
 
@@ -140,8 +148,10 @@ provider is permitted, a one-case Full Information test can be run with:
 
 ## Data governance
 
-The model configs request OpenRouter endpoints with `data_collection: deny`.
-That routing preference is a technical safeguard, not authorization to send
+The model configs enforce OpenRouter's per-request Zero Data Retention filter.
+OpenRouter states that ZDR endpoints do not store prompt data for any period
+and that OpenRouter itself does not retain prompts unless prompt logging is
+explicitly enabled. These technical safeguards are not authorization to send
 credentialed health data to a third party. Confirm the applicable PhysioNet
 credentialed-data agreement, provider terms, and institutional approvals before
 running real patient records through any hosted API.

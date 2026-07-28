@@ -26,7 +26,9 @@ class OpenRouterConfigsTest(unittest.TestCase):
             self.assertEqual(config["api_base_url"], "https://openrouter.ai/api/v1")
             self.assertFalse(config["api_provider"]["allow_fallbacks"])
             self.assertTrue(config["api_provider"]["require_parameters"])
-            self.assertEqual(config["api_provider"]["data_collection"], "deny")
+            if "data_collection" in config["api_provider"]:
+                self.assertEqual(config["api_provider"]["data_collection"], "deny")
+            self.assertTrue(config["api_provider"]["zdr"])
             self.assertEqual(len(config["api_provider"]["order"]), 1)
 
         self.assertEqual(len(model_names), len(expected))

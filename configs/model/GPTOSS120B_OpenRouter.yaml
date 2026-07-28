@@ -20,6 +20,7 @@ api_provider:
   allow_fallbacks: false
   require_parameters: true
   data_collection: deny
+  zdr: true
 
 api_reasoning:
   # GPT-OSS requires reasoning; use the minimum supported effort and do not

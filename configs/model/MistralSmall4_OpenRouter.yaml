@@ -13,13 +13,13 @@ max_context_length: 262144
 max_output_tokens: 2048
 exllama: False
 
-# Mistral's first-party endpoint is stable and preserves implementation identity.
+# Venice is the currently available ZDR route for this model.
 api_provider:
   order:
-    - mistral
+    - venice
   allow_fallbacks: false
   require_parameters: true
-  data_collection: deny
+  zdr: true
 
 api_reasoning:
   enabled: false

@@ -20,6 +20,7 @@ api_provider:
   allow_fallbacks: false
   require_parameters: true
   data_collection: deny
+  zdr: true
 
 system_tag_start: "<|im_start|>system"
 system_tag_end: "<|im_end|>"

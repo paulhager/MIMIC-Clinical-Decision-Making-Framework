@@ -13,13 +13,15 @@ max_context_length: 262144
 max_output_tokens: 2048
 exllama: False
 
-# Alibaba's FP8 endpoint is the first-party, lowest-cost route.
+# AtlasCloud is the least expensive currently healthy ZDR route. DeepInfra's
+# route currently advertises no uptime and returns provider rate-limit errors.
 api_provider:
   order:
-    - alibaba
+    - atlas-cloud
   allow_fallbacks: false
   require_parameters: true
   data_collection: deny
+  zdr: true
 
 api_reasoning:
   enabled: false
