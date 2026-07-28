@@ -1,0 +1,40 @@
+# @package _global_
+defaults:
+  - _self_
+
+# The key is resolved from the environment; do not put it in this file.
+openai_api_key:
+api_key_env: OPENROUTER_API_KEY
+api_base_url: https://openrouter.ai/api/v1
+api_site_url_env: OPENROUTER_SITE_URL
+api_app_name_env: OPENROUTER_APP_NAME
+
+# OpenRouter model slug for google/gemma-4-26B-A4B-it.
+model_name: google/gemma-4-26b-a4b-it
+max_context_length: 262144
+max_output_tokens: 2048
+exllama: False
+
+# Pin one high-uptime endpoint so leaderboard runs are reproducible. Disable
+# provider fallback so a run cannot silently switch inference implementations.
+api_provider:
+  order:
+    - deepinfra
+  allow_fallbacks: false
+  data_collection: deny
+
+# Keep benchmark responses concise and prevent hidden reasoning-token variance.
+api_reasoning:
+  enabled: false
+
+# These tags are only used internally to turn legacy prompts into chat messages.
+system_tag_start: "<|im_start|>system"
+system_tag_end: "<|im_end|>"
+
+user_tag_start: "<|im_start|>user"
+user_tag_end: "<|im_end|>"
+
+ai_tag_start: "<|im_start|>assistant"
+ai_tag_end: "<|im_end|>"
+
+stop_words:

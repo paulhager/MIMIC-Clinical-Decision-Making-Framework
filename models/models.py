@@ -3,7 +3,6 @@ from os.path import join
 from typing import Any, List, Mapping, Dict
 
 import torch
-import openai
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -16,6 +15,7 @@ from exllamav2.generator import ExLlamaV2Sampler
 import tiktoken
 
 from models.utils import create_stop_criteria, create_stop_criteria_exllama
+from models.hosted_api import HostedChatClient
 from agents.agent import STOP_WORDS
 from utils.nlp import extract_sections
 
@@ -35,6 +35,15 @@ class CustomLLM(LLM):
     self_consistency: bool = False
 
     openai_api_key: str = None
+    api_key_env: str = None
+    api_base_url: str = None
+    api_site_url_env: str = None
+    api_app_name_env: str = None
+    api_provider: Dict[str, Any] = None
+    api_reasoning: Dict[str, Any] = None
+    max_output_tokens: int = 2048
+    hosted_client: Any = None
+    last_api_metadata: Dict[str, Any] = None
     tags: Dict[str, str] = None
 
     @property
@@ -66,9 +75,21 @@ class CustomLLM(LLM):
 
         if self.model_name == "Human":
             return
-        elif self.openai_api_key:
-            self.tokenizer = tiktoken.encoding_for_model(self.model_name)
-            openai.api_key = self.openai_api_key
+        elif self.openai_api_key or self.api_key_env:
+            try:
+                self.tokenizer = tiktoken.encoding_for_model(self.model_name)
+            except KeyError:
+                # Hosted open-weight models are not registered in tiktoken.
+                # This is used for conservative prompt-length accounting only.
+                self.tokenizer = tiktoken.get_encoding("cl100k_base")
+
+            self.hosted_client = HostedChatClient(
+                api_key=self.openai_api_key,
+                api_key_env=self.api_key_env,
+                api_base_url=self.api_base_url,
+                site_url_env=self.api_site_url_env,
+                app_name_env=self.api_app_name_env,
+            )
             return
         elif (
             self.model_name
@@ -233,7 +254,7 @@ class CustomLLM(LLM):
 
     @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(10))
     def completion_with_backoff(self, **kwargs):
-        return openai.ChatCompletion.create(**kwargs)
+        return self.hosted_client.create(**kwargs)
 
     def remove_input_tokens(self, output_tokens, ids):
         # Truncate the larger tensor to match the size of the smaller one
@@ -265,19 +286,27 @@ class CustomLLM(LLM):
         if self.model_name == "Human":
             output = input(prompt)
 
-        elif self.openai_api_key:
+        elif self.openai_api_key or self.api_key_env:
             messages = extract_sections(
                 prompt,
                 self.tags,
             )
 
-            response = self.completion_with_backoff(
+            request = dict(
                 model=self.model_name,
                 messages=messages,
                 stop=STOP_WORDS,
                 temperature=0.0,
                 seed=self.seed,
+                max_tokens=self.max_output_tokens,
             )
+            if self.api_provider:
+                request["provider"] = self.api_provider
+            if self.api_reasoning:
+                request["reasoning"] = self.api_reasoning
+
+            response = self.completion_with_backoff(**request)
+            self.last_api_metadata = HostedChatClient.response_metadata(response)
             output = response["choices"][0]["message"]["content"]
         elif self.exllama:
             with torch.inference_mode():

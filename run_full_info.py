@@ -4,11 +4,13 @@ from os.path import join
 import json
 import random
 from datetime import datetime
+from pathlib import Path
 import time
 import pickle
 import fcntl
 
 import numpy as np
+from dotenv import load_dotenv
 import hydra
 from omegaconf import DictConfig
 from loguru import logger
@@ -54,6 +56,8 @@ from agents.prompts import (
     CONFIRM_DIAG_TEMPLATE,
     WRITE_DIAG_CRITERIA_TEMPLATE,
 )
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 gpt_tags = {
     "system_tag_start": "<|im_start|>system",
@@ -107,6 +111,13 @@ def run(args: DictConfig):
     llm = CustomLLM(
         model_name=args.model_name,
         openai_api_key=args.openai_api_key,
+        api_key_env=args.get("api_key_env"),
+        api_base_url=args.get("api_base_url"),
+        api_site_url_env=args.get("api_site_url_env"),
+        api_app_name_env=args.get("api_app_name_env"),
+        api_provider=dict(args.get("api_provider") or {}),
+        api_reasoning=dict(args.get("api_reasoning") or {}),
+        max_output_tokens=args.get("max_output_tokens", 2048),
         tags=tags,
         max_context_length=args.max_context_length,
         exllama=args.exllama,

@@ -2,10 +2,12 @@ import os
 from os.path import join
 import random
 from datetime import datetime
+from pathlib import Path
 import time
 import pickle
 
 import numpy as np
+from dotenv import load_dotenv
 import hydra
 from omegaconf import DictConfig
 from loguru import logger
@@ -19,6 +21,8 @@ from utils.nlp import create_lab_test_string
 from models.models import CustomLLM
 
 from agents.prompts import REFERENCE_RANGE_TEST_RR, REFERENCE_RANGE_TEST_ZEROSHOT
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 
 @hydra.main(config_path="./configs", config_name="config", version_base=None)
@@ -39,6 +43,13 @@ def run(args: DictConfig):
     llm = CustomLLM(
         model_name=args.model_name,
         openai_api_key=args.openai_api_key,
+        api_key_env=args.get("api_key_env"),
+        api_base_url=args.get("api_base_url"),
+        api_site_url_env=args.get("api_site_url_env"),
+        api_app_name_env=args.get("api_app_name_env"),
+        api_provider=dict(args.get("api_provider") or {}),
+        api_reasoning=dict(args.get("api_reasoning") or {}),
+        max_output_tokens=args.get("max_output_tokens", 2048),
         tags=tags,
         max_context_length=args.max_context_length,
         exllama=args.exllama,
