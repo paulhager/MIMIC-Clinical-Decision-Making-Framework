@@ -1,7 +1,6 @@
 import re
 from typing import Any, Optional, Sequence, Tuple, List, Dict
 from abc import abstractmethod
-from torch import Tensor
 
 from thefuzz import fuzz
 
@@ -9,7 +8,6 @@ from langchain.evaluation import AgentTrajectoryEvaluator
 from agents.AgentAction import AgentAction
 from utils.nlp import keyword_positive, remove_punctuation
 from agents.DiagnosisWorkflowParser import InvalidActionError
-from models.utils import calculate_log_prob_confidence
 
 
 class PathologyEvaluator(AgentTrajectoryEvaluator):
@@ -55,7 +53,7 @@ class PathologyEvaluator(AgentTrajectoryEvaluator):
         reference: Optional[
             Tuple[str, List[str], List[str], List[str], List[str], List[str]]
         ] = None,
-        diagnosis_probabilities: Optional[Tensor] = None,
+        diagnosis_probabilities: Optional[Any] = None,
         **kwargs: Any,
     ) -> dict:
         self.discharge_diagnosis = reference[0]

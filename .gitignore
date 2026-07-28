@@ -3,3 +3,6 @@ __pycache__
 .env.*
 !.env.example
 .venv-openrouter/
+.venv-hosted/
+runtime_data/
+configs/paths/local.yaml

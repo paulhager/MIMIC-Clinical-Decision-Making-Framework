@@ -1,0 +1,33 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+api_key_env: OPENROUTER_API_KEY
+api_base_url: https://openrouter.ai/api/v1
+api_site_url_env: OPENROUTER_SITE_URL
+api_app_name_env: OPENROUTER_APP_NAME
+
+model_name: mistralai/mistral-small-2603
+max_context_length: 262144
+max_output_tokens: 2048
+exllama: False
+
+# Mistral's first-party endpoint is stable and preserves implementation identity.
+api_provider:
+  order:
+    - mistral
+  allow_fallbacks: false
+  require_parameters: true
+  data_collection: deny
+
+api_reasoning:
+  enabled: false
+
+system_tag_start: "<|im_start|>system"
+system_tag_end: "<|im_end|>"
+user_tag_start: "<|im_start|>user"
+user_tag_end: "<|im_end|>"
+ai_tag_start: "<|im_start|>assistant"
+ai_tag_end: "<|im_end|>"
+stop_words:

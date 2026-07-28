@@ -33,6 +33,9 @@ To run the clinical decision making task, execute ```python run.py```. The argum
 - model: Specify which model to use. The model file also contains the different role tags
 - summarize: Automatically summarize the progress if we begin to reach the token limit
 
+Recent open models can be evaluated through OpenRouter without downloading
+weights. See [the OpenRouter setup and model list](docs/openrouter.md).
+
 These additional arguments change the way information is presented but did not help performance in my experience and so were not included in the paper:
 - include_ref_range: Include the reference ranges for lab results, as provided in the MIMIC database
 - bin_lab_results: Replace exact lab result values with the word "low", "normal", or "high", using the reference ranges

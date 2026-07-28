@@ -4,28 +4,29 @@ import string
 import copy
 
 import pandas as pd
-import spacy
-from negspacy.negation import Negex  # noqa: F401
-import nltk
 import re
 from thefuzz import process, fuzz
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from transformers import LlamaTokenizer, AutoTokenizer
-from exllamav2 import ExLlamaV2Tokenizer
 import tiktoken
 
 from tools.utils import FLUID_MAPPING, itemid_to_field
 
-nlp = spacy.load("en_core_sci_lg")
-nlp.add_pipe(
-    "negex",
-    config={
-        "chunk_prefix": ["no"],
-    },
-    last=True,
-)
-# nltk.download("stopwords")
+_clinical_nlp_pipeline = None
+
+
+def clinical_nlp():
+    """Load the large clinical NLP pipeline only when scoring needs it."""
+    global _clinical_nlp_pipeline
+    if _clinical_nlp_pipeline is None:
+        import spacy
+        from negspacy.negation import Negex  # noqa: F401
+
+        _clinical_nlp_pipeline = spacy.load("en_core_sci_lg")
+        _clinical_nlp_pipeline.add_pipe(
+            "negex",
+            config={"chunk_prefix": ["no"]},
+            last=True,
+        )
+    return _clinical_nlp_pipeline
 
 ###
 # Collection of functions for natural language processing utility
@@ -46,7 +47,7 @@ def treatment_alternative_procedure_checker(operation_keywords, text):
 
 # Makes check if a keyword is positive i.e. occurs and is not negated. For negation check uses the negex algorithm i.e. "No appendicitis" or "No signs of appendicitis" or "Abscence of typical indications of appendicitis"
 def keyword_positive(sentence, keyword):
-    doc = nlp(sentence)
+    doc = clinical_nlp()(sentence)
 
     for e in doc.ents:
         if keyword.lower() in e.text.lower():
@@ -90,14 +91,18 @@ def procedure_checker(
 
 # Extract keywords from text using spacy library. Keywords are nouns and adjectives
 def extract_keywords_spacy(text: str):
-    nlp = spacy.load("en_core_web_sm")
-    doc = nlp(text)
+    import spacy
+
+    doc = spacy.load("en_core_web_sm")(text)
     keywords = [token.text for token in doc if token.pos_ in ["NOUN", "ADJ", "PROPN"]]
     return keywords
 
 
 # Extract keywords from text using nltk library. Keywords are nouns and adjectives
 def extract_keywords_nltk(text: str):
+    import nltk
+    from nltk.tokenize import word_tokenize
+
     words = word_tokenize(text)
     pos_tags = nltk.pos_tag(words)
     keywords = [word for word, tag in pos_tags if tag in ["NN", "NNS", "JJ", "NNP"]]
@@ -193,6 +198,8 @@ def convert_labs_to_itemid(tests: List[str], lab_test_mapping_df: pd.DataFrame):
 
 
 def remove_stop_words(sentence):
+    from nltk.corpus import stopwords
+
     nltk_stop_words = set(stopwords.words("english"))
 
     # Keep uppercase single letters as they often are part of lab tests
@@ -266,7 +273,8 @@ def extract_primary_diagnosis(text):
     earliest_keyword_index = len(text)
 
     # Do parsing of entire text and check for earliest possible diagnosis
-    doc = nlp(text)
+    nlp_pipeline = clinical_nlp()
+    doc = nlp_pipeline(text)
     diag = check_ents_for_diagnosis_noun_chunks(doc)
     if diag:
         earliest_keyword_index = min(earliest_keyword_index, text.find(diag))
@@ -276,7 +284,7 @@ def extract_primary_diagnosis(text):
 
     # Do parsing of each line and check for earliest possible diagnosis
     for line in text.split("\n"):
-        doc = nlp(line)
+        doc = nlp_pipeline(line)
         diag = check_ents_for_diagnosis_noun_chunks(doc)
         if diag:
             earliest_keyword_index = min(earliest_keyword_index, text.find(diag))
@@ -335,7 +343,7 @@ def calculate_num_tokens(tokenizer, inputs):
     num_tokens = 0
     for input in inputs:
         tokens = tokenizer.encode(input)
-        if isinstance(tokenizer, ExLlamaV2Tokenizer):
+        if tokenizer.__class__.__name__ == "ExLlamaV2Tokenizer":
             num_tokens += tokens.shape[-1]
         else:
             num_tokens += len(tokens)
@@ -343,7 +351,7 @@ def calculate_num_tokens(tokenizer, inputs):
 
 
 def truncate_text(tokenizer, input, available_tokens):
-    if isinstance(tokenizer, ExLlamaV2Tokenizer):
+    if tokenizer.__class__.__name__ == "ExLlamaV2Tokenizer":
         truncated_input_tokens = tokenizer.encode(input)[:, :available_tokens]
         input = tokenizer.decode(truncated_input_tokens)[0]
     elif isinstance(tokenizer, tiktoken.Encoding):

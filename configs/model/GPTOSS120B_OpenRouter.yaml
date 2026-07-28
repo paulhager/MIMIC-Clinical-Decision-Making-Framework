@@ -1,0 +1,36 @@
+# @package _global_
+defaults:
+  - _self_
+
+openai_api_key:
+api_key_env: OPENROUTER_API_KEY
+api_base_url: https://openrouter.ai/api/v1
+api_site_url_env: OPENROUTER_SITE_URL
+api_app_name_env: OPENROUTER_APP_NAME
+
+model_name: openai/gpt-oss-120b
+max_context_length: 131072
+max_output_tokens: 2048
+exllama: False
+
+# DeepInfra's BF16 endpoint is inexpensive, stable, and reproducible.
+api_provider:
+  order:
+    - deepinfra
+  allow_fallbacks: false
+  require_parameters: true
+  data_collection: deny
+
+api_reasoning:
+  # GPT-OSS requires reasoning; use the minimum supported effort and do not
+  # return the reasoning trace to the benchmark parser.
+  effort: low
+  exclude: true
+
+system_tag_start: "<|im_start|>system"
+system_tag_end: "<|im_end|>"
+user_tag_start: "<|im_start|>user"
+user_tag_end: "<|im_end|>"
+ai_tag_start: "<|im_start|>assistant"
+ai_tag_end: "<|im_end|>"
+stop_words:

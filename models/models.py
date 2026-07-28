@@ -2,19 +2,14 @@ import os
 from os.path import join
 from typing import Any, List, Mapping, Dict
 
-import torch
 from tenacity import (
     retry,
     stop_after_attempt,
     wait_random_exponential,
 )
-from transformers import GenerationConfig, StoppingCriteriaList
-from auto_gptq import exllama_set_max_input_length
 from langchain.llms.base import LLM
-from exllamav2.generator import ExLlamaV2Sampler
 import tiktoken
 
-from models.utils import create_stop_criteria, create_stop_criteria_exllama
 from models.hosted_api import HostedChatClient
 from agents.agent import STOP_WORDS
 from utils.nlp import extract_sections
@@ -23,7 +18,7 @@ from utils.nlp import extract_sections
 class CustomLLM(LLM):
     model_name: str
     max_context_length: int
-    probabilities: torch.Tensor = None
+    probabilities: Any = None
     exllama: bool = False
     load_in_8bit: bool = False
     load_in_4bit: bool = False
@@ -71,8 +66,6 @@ class CustomLLM(LLM):
         return self.truncation_side
 
     def load_model(self, base_models: str) -> None:
-        torch.cuda.empty_cache()
-
         if self.model_name == "Human":
             return
         elif self.openai_api_key or self.api_key_env:
@@ -91,7 +84,12 @@ class CustomLLM(LLM):
                 app_name_env=self.api_app_name_env,
             )
             return
-        elif (
+
+        import torch
+
+        torch.cuda.empty_cache()
+
+        if (
             self.model_name
             == "GeorgiaTechResearchInstitute/galactica-6.7b-evol-instruct-70k"
         ):
@@ -132,6 +130,7 @@ class CustomLLM(LLM):
                 self.generator.warmup()
 
             else:
+                from auto_gptq import exllama_set_max_input_length
                 from transformers import LlamaTokenizer, LlamaForCausalLM
 
                 base_model = join(base_models, self.model_name)
@@ -309,6 +308,10 @@ class CustomLLM(LLM):
             self.last_api_metadata = HostedChatClient.response_metadata(response)
             output = response["choices"][0]["message"]["content"]
         elif self.exllama:
+            import torch
+            from exllamav2.generator import ExLlamaV2Sampler
+            from models.utils import create_stop_criteria_exllama
+
             with torch.inference_mode():
                 ids = self.tokenizer.encode(prompt, encode_special_tokens=True)
                 tokens_prompt = ids.shape[-1]
@@ -342,6 +345,10 @@ class CustomLLM(LLM):
                     output_tokens, decode_special_tokens=False
                 )[0]
         else:
+            import torch
+            from transformers import GenerationConfig, StoppingCriteriaList
+            from models.utils import create_stop_criteria
+
             inputs = self.tokenizer(
                 prompt,
                 return_tensors="pt",

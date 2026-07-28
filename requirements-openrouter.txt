@@ -2,3 +2,4 @@
 # openai 0.28 matches the framework's existing API adapter.
 openai==0.28.1
 python-dotenv>=1.0,<2
+PyYAML>=6.0,<7

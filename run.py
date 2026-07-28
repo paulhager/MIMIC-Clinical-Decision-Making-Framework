@@ -6,7 +6,6 @@ from pathlib import Path
 import time
 
 import numpy as np
-import torch
 from dotenv import load_dotenv
 
 import hydra
@@ -44,9 +43,15 @@ def load_evaluator(pathology):
 @hydra.main(config_path="./configs", config_name="config", version_base=None)
 def run(args: DictConfig):
     if not args.self_consistency:
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = True
-        torch.manual_seed(args.seed)
+        try:
+            import torch
+
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = True
+            torch.manual_seed(args.seed)
+        except ImportError:
+            # Hosted inference does not require PyTorch.
+            pass
         random.seed(args.seed)
         np.random.seed(args.seed)
 
