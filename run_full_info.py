@@ -12,7 +12,7 @@ import fcntl
 import numpy as np
 from dotenv import load_dotenv
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from loguru import logger
 import langchain
 from langchain.prompts import PromptTemplate
@@ -115,8 +115,12 @@ def run(args: DictConfig):
         api_base_url=args.get("api_base_url"),
         api_site_url_env=args.get("api_site_url_env"),
         api_app_name_env=args.get("api_app_name_env"),
-        api_provider=dict(args.get("api_provider") or {}),
-        api_reasoning=dict(args.get("api_reasoning") or {}),
+        api_provider=OmegaConf.to_container(
+            args.get("api_provider") or {}, resolve=True
+        ),
+        api_reasoning=OmegaConf.to_container(
+            args.get("api_reasoning") or {}, resolve=True
+        ),
         max_output_tokens=args.get("max_output_tokens", 2048),
         tags=tags,
         max_context_length=args.max_context_length,

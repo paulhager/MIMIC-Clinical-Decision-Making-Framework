@@ -282,6 +282,7 @@ class CustomLLM(LLM):
         **kwargs,
     ) -> str:
         self.probabilities = None
+        effective_stop_words = list(dict.fromkeys([*STOP_WORDS, *(stop or [])]))
         if self.model_name == "Human":
             output = input(prompt)
 
@@ -294,7 +295,7 @@ class CustomLLM(LLM):
             request = dict(
                 model=self.model_name,
                 messages=messages,
-                stop=STOP_WORDS,
+                stop=effective_stop_words,
                 temperature=0.0,
                 seed=self.seed,
                 max_tokens=self.max_output_tokens,
@@ -326,7 +327,9 @@ class CustomLLM(LLM):
                     seed = self.seed
 
                 stop_criteria = create_stop_criteria_exllama(
-                    stop, self.tokenizer.eos_token_id, self.tokenizer
+                    effective_stop_words,
+                    self.tokenizer.eos_token_id,
+                    self.tokenizer,
                 )
 
                 output_tokens, self.probabilities = self.generator.generate_simple(
@@ -371,7 +374,7 @@ class CustomLLM(LLM):
             )
 
             stop_criteria = create_stop_criteria(
-                stop, self.tokenizer, self.model.device
+                effective_stop_words, self.tokenizer, self.model.device
             )
 
             with torch.no_grad():
@@ -391,7 +394,7 @@ class CustomLLM(LLM):
             ]
 
         # Remove observations strings from output if generated
-        for stop_word in STOP_WORDS + stop:
+        for stop_word in effective_stop_words:
             output = output.replace(stop_word, "")
 
         return output.strip()
