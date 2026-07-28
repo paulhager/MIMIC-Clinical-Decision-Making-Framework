@@ -90,7 +90,41 @@ Convert the credentialed PhysioNet release into the framework's runtime format:
 
 This creates ignored files under `runtime_data/` and writes the ignored local
 Hydra paths config at `configs/paths/local.yaml`. It also creates one-patient
-lists for inexpensive end-to-end tests.
+smoke lists and deterministic five-patient pilot lists for inexpensive
+end-to-end tests.
+
+## 6. Keep the campaign under budget
+
+Add these optional settings to `.env`:
+
+```dotenv
+OPENROUTER_USAGE_LOG=runtime_data/openrouter_usage.jsonl
+OPENROUTER_BUDGET_USD=80
+OPENROUTER_BUDGET_RESERVE_USD=1
+```
+
+Every hosted response then appends model, provider, token, and cost metadata to
+the ignored JSONL ledger. Prompts and responses are never written to that file.
+Before every request, the client totals the ledger and stops at $79, leaving the
+configured $1 reserve. An $80 campaign limit intentionally leaves headroom below
+a $100 account or card ceiling.
+
+Inspect cumulative spend at any time with:
+
+```bash
+.venv-hosted/bin/python scripts/openrouter_usage.py
+```
+
+Use a five-case CDM pilot for each pathology before a full run:
+
+```bash
+.venv-hosted/bin/python run.py \
+  paths=local \
+  model=Gemma4_26B_OpenRouter \
+  pathology=appendicitis \
+  patient_list_path=runtime_data/appendicitis_pilot_patient.pkl \
+  run_descr=_PILOT
+```
 
 After confirming that sending credentialed MIMIC-derived text to the configured
 provider is permitted, a one-case Full Information test can be run with:

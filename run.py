@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from pathlib import Path
 import time
+import pickle
 
 import numpy as np
 from dotenv import load_dotenv
@@ -124,9 +125,14 @@ def run(args: DictConfig):
     # Set langsmith project name
     # os.environ["LANGCHAIN_PROJECT"] = run_name
 
-    # Predict for all patients
+    # Predict for all patients, or a small pilot list when requested.
+    patient_list = hadm_info_clean.keys()
+    if args.patient_list_path:
+        with open(args.patient_list_path, "rb") as patient_list_file:
+            patient_list = pickle.load(patient_list_file)
+
     first_patient_seen = False
-    for _id in hadm_info_clean.keys():
+    for _id in patient_list:
         if args.first_patient and not first_patient_seen:
             if _id == args.first_patient:
                 first_patient_seen = True

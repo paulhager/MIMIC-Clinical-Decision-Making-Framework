@@ -1,10 +1,18 @@
 """Small OpenAI-compatible client shared by the framework and smoke tests."""
 
+import fcntl
+import json
 import os
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict
 
 import openai
 import requests
+
+
+class HostedAPIBudgetExceeded(RuntimeError):
+    """Raised before a request when the configured campaign budget is exhausted."""
 
 
 class HostedChatClient:
@@ -36,8 +44,59 @@ class HostedChatClient:
             openai.requestssession = requests.Session()
             openai.requestssession.headers.update(headers)
 
+        usage_log = os.getenv("OPENROUTER_USAGE_LOG")
+        self.usage_log = Path(usage_log).expanduser() if usage_log else None
+        budget = os.getenv("OPENROUTER_BUDGET_USD")
+        reserve = os.getenv("OPENROUTER_BUDGET_RESERVE_USD", "1")
+        self.budget_usd = float(budget) if budget else None
+        self.budget_reserve_usd = float(reserve)
+
     def create(self, **kwargs):
-        return openai.ChatCompletion.create(**kwargs)
+        self._check_budget()
+        response = openai.ChatCompletion.create(**kwargs)
+        self._record_usage(self.response_metadata(response))
+        return response
+
+    def _logged_cost(self) -> float:
+        if not self.usage_log or not self.usage_log.exists():
+            return 0.0
+
+        total = 0.0
+        with self.usage_log.open(encoding="utf-8") as log_file:
+            fcntl.flock(log_file.fileno(), fcntl.LOCK_SH)
+            for line in log_file:
+                try:
+                    total += float(json.loads(line).get("cost") or 0)
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    continue
+            fcntl.flock(log_file.fileno(), fcntl.LOCK_UN)
+        return total
+
+    def _check_budget(self) -> None:
+        if self.budget_usd is None:
+            return
+        stop_at = max(0, self.budget_usd - self.budget_reserve_usd)
+        spent = self._logged_cost()
+        if spent >= stop_at:
+            raise HostedAPIBudgetExceeded(
+                f"OpenRouter campaign spend ${spent:.4f} reached the "
+                f"${stop_at:.2f} stop threshold (${self.budget_usd:.2f} budget "
+                f"with ${self.budget_reserve_usd:.2f} reserved)."
+            )
+
+    def _record_usage(self, metadata: Dict[str, Any]) -> None:
+        if not self.usage_log:
+            return
+        self.usage_log.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            **metadata,
+        }
+        with self.usage_log.open("a", encoding="utf-8") as log_file:
+            fcntl.flock(log_file.fileno(), fcntl.LOCK_EX)
+            log_file.write(json.dumps(entry, separators=(",", ":")) + "\n")
+            log_file.flush()
+            fcntl.flock(log_file.fileno(), fcntl.LOCK_UN)
 
     @staticmethod
     def response_metadata(response) -> Dict[str, Any]:

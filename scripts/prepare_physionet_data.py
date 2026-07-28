@@ -16,6 +16,17 @@ PATHOLOGIES = (
     "diverticulitis",
     "pancreatitis",
 )
+PILOT_SIZE = 5
+
+
+def evenly_spaced(values: list[int], count: int) -> list[int]:
+    """Choose deterministic cases across the full ordered cohort."""
+    if count >= len(values):
+        return values
+    if count <= 1:
+        return values[:count]
+    last = len(values) - 1
+    return [values[round(index * last / (count - 1))] for index in range(count)]
 
 
 def grouped_values(frame: pd.DataFrame, column: str) -> dict[int, list]:
@@ -164,6 +175,8 @@ def write_runtime_data(source: Path, output: Path) -> dict[str, int]:
             pickle.dump(selected, output_file)
         with (output / f"{pathology}_smoke_patient.pkl").open("wb") as output_file:
             pickle.dump([next(iter(selected))], output_file)
+        with (output / f"{pathology}_pilot_patient.pkl").open("wb") as output_file:
+            pickle.dump(evenly_spaced(list(selected), PILOT_SIZE), output_file)
         counts[pathology] = len(selected)
 
     mapping.to_pickle(output / "lab_test_mapping.pkl")
