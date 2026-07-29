@@ -46,7 +46,7 @@ The currently configured hosted models are:
 
 | Hydra config | OpenRouter model | Pinned provider |
 | --- | --- | --- |
-| `Gemma4_26B_OpenRouter` | `google/gemma-4-26b-a4b-it` | DeepInfra |
+| `Gemma4_26B_OpenRouter` | `google/gemma-4-26b-a4b-it` | Novita (BF16) |
 | `GPTOSS120B_OpenRouter` | `openai/gpt-oss-120b` | DeepInfra |
 | `Qwen3.5_397B_OpenRouter` | `qwen/qwen3.5-397b-a17b` | AtlasCloud |
 | `DeepSeekV4Flash_OpenRouter` | `deepseek/deepseek-v4-flash` | DeepInfra |
@@ -87,6 +87,8 @@ local-weight packages:
 uv venv --python 3.11 .venv-hosted
 uv pip install --python .venv-hosted/bin/python \
   -r requirements-hosted.txt
+.venv-hosted/bin/python -m nltk.downloader \
+  -d runtime_data/nltk_data stopwords
 ```
 
 Convert the credentialed PhysioNet release into the framework's runtime format:
@@ -126,7 +128,7 @@ Inspect cumulative spend at any time with:
 Use a five-case CDM pilot for each pathology before a full run:
 
 ```bash
-.venv-hosted/bin/python run.py \
+NLTK_DATA=runtime_data/nltk_data .venv-hosted/bin/python run.py \
   paths=local \
   model=Gemma4_26B_OpenRouter \
   pathology=appendicitis \

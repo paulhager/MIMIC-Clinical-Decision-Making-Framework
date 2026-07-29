@@ -298,7 +298,7 @@ def build_agent_executor_ZeroShot(
     agent = CustomZeroShotAgent(
         llm_chain=llm_chain,
         output_parser=output_parser,
-        stop=list(STOP_WORDS + model_stop_words),
+        stop=list(STOP_WORDS + (model_stop_words or [])),
         allowed_tools=tool_names,
         verbose=True,
         return_intermediate_steps=True,

@@ -84,6 +84,9 @@ def run(args: DictConfig):
         api_reasoning=OmegaConf.to_container(
             args.get("api_reasoning") or {}, resolve=True
         ),
+        api_sampling=OmegaConf.to_container(
+            args.get("api_sampling") or {}, resolve=True
+        ),
         max_output_tokens=args.get("max_output_tokens", 2048),
         tags=tags,
         max_context_length=args.max_context_length,

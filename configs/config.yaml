@@ -23,6 +23,7 @@ run_descr:
 
 first_patient:
 patient_list_path:
+resume_run_dir:
 
 order: pli
 diagnostic_criteria:

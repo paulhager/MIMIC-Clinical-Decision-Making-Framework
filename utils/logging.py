@@ -52,3 +52,15 @@ def read_from_pickle_file(filename):
                 yield pickle.load(f)
             except EOFError:
                 break
+
+
+def completed_patient_ids(filename):
+    """Return patient IDs already appended to a benchmark result stream."""
+    completed = set()
+    try:
+        for record in read_from_pickle_file(filename):
+            if isinstance(record, dict):
+                completed.update(record)
+    except FileNotFoundError:
+        pass
+    return completed

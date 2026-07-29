@@ -21,7 +21,7 @@ from thefuzz import process
 
 from utils.nlp import calculate_num_tokens, truncate_text, create_lab_test_string
 from dataset.utils import load_hadm_from_file
-from utils.logging import append_to_pickle_file
+from utils.logging import append_to_pickle_file, completed_patient_ids
 from evaluators.appendicitis_evaluator import AppendicitisEvaluator
 from evaluators.cholecystitis_evaluator import CholecystitisEvaluator
 from evaluators.diverticulitis_evaluator import DiverticulitisEvaluator
@@ -120,6 +120,9 @@ def run(args: DictConfig):
         ),
         api_reasoning=OmegaConf.to_container(
             args.get("api_reasoning") or {}, resolve=True
+        ),
+        api_sampling=OmegaConf.to_container(
+            args.get("api_sampling") or {}, resolve=True
         ),
         max_output_tokens=args.get("max_output_tokens", 2048),
         tags=tags,
@@ -246,9 +249,14 @@ def run(args: DictConfig):
         run_name += "_PROBS"
     if args.run_descr:
         run_name += str(args.run_descr)
-    run_dir = join(args.local_logging_dir, run_name)
-
-    os.makedirs(run_dir, exist_ok=True)
+    if args.get("resume_run_dir"):
+        run_dir = os.path.abspath(os.path.expanduser(args.resume_run_dir))
+        if not os.path.isdir(run_dir):
+            raise ValueError(f"Resume directory does not exist: {run_dir}")
+        run_name = os.path.basename(os.path.normpath(run_dir))
+    else:
+        run_dir = join(args.local_logging_dir, run_name)
+        os.makedirs(run_dir, exist_ok=True)
 
     # Setup logfile and logpickle
     results_log_path = join(run_dir, f"{run_name}_results.pkl")
@@ -276,8 +284,14 @@ def run(args: DictConfig):
         with open(args.patient_list_path, "rb") as f:
             patient_list = pickle.load(f)
 
+    completed_ids = completed_patient_ids(results_log_path)
+    if completed_ids:
+        logger.info(f"Resuming after {len(completed_ids)} completed patients")
+
     first_patient_seen = False
     for _id in patient_list:
+        if _id in completed_ids:
+            continue
         if args.first_patient and not first_patient_seen:
             if _id == args.first_patient:
                 first_patient_seen = True

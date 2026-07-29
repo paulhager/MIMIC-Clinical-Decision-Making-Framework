@@ -101,6 +101,9 @@ class HostedChatClient:
     @staticmethod
     def response_metadata(response) -> Dict[str, Any]:
         usage = response.get("usage", {})
+        choices = response.get("choices") or []
+        choice = choices[0] if choices else {}
+        message = choice.get("message") or {}
         return {
             "model": response.get("model"),
             "provider": response.get("provider"),
@@ -108,4 +111,6 @@ class HostedChatClient:
             "completion_tokens": usage.get("completion_tokens"),
             "total_tokens": usage.get("total_tokens"),
             "cost": usage.get("cost"),
+            "finish_reason": choice.get("finish_reason"),
+            "content_present": bool(message.get("content")),
         }

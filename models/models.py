@@ -36,6 +36,7 @@ class CustomLLM(LLM):
     api_app_name_env: str = None
     api_provider: Dict[str, Any] = None
     api_reasoning: Dict[str, Any] = None
+    api_sampling: Dict[str, Any] = None
     max_output_tokens: int = 2048
     hosted_client: Any = None
     last_api_metadata: Dict[str, Any] = None
@@ -291,6 +292,19 @@ class CustomLLM(LLM):
                 prompt,
                 self.tags,
             )
+            # Local causal models continue directly from the final open
+            # assistant tag (for example, "Thought:"). Chat-completions APIs
+            # instead interpret that prefill as an already completed assistant
+            # turn, leaving no user turn to answer. Remove only the unfinished
+            # trailing assistant message; completed scratchpad turns remain.
+            assistant_prefill = ""
+            if (
+                messages
+                and messages[-1]["role"] == "assistant"
+                and not prompt.rstrip().endswith(self.tags["ai_tag_end"])
+            ):
+                assistant_prefill = messages[-1]["content"].strip()
+                messages.pop()
 
             request = dict(
                 model=self.model_name,
@@ -304,10 +318,47 @@ class CustomLLM(LLM):
                 request["provider"] = self.api_provider
             if self.api_reasoning:
                 request["reasoning"] = self.api_reasoning
+            if self.api_sampling:
+                request.update(self.api_sampling)
 
             response = self.completion_with_backoff(**request)
             self.last_api_metadata = HostedChatClient.response_metadata(response)
-            output = response["choices"][0]["message"]["content"]
+            # Treat an empty provider completion as an invalid model action. The
+            # agent can recover on its next turn, and a benchmark cohort should
+            # not abort because one model response was empty.
+            output = response["choices"][0]["message"].get("content") or ""
+            # Some Gemma 4 endpoints leak a truncated thought-channel control
+            # token at the start of otherwise valid visible content (for
+            # example, "t\n<channel|>Thought:"). Remove only such a leading
+            # fragment and retain the first benchmark schema field.
+            control_prefix = output[:160].lower()
+            if "<" in control_prefix and "chan" in control_prefix:
+                schema_offsets = [
+                    offset
+                    for marker in (
+                        "Thought:",
+                        "Action:",
+                        "Final Diagnosis:",
+                        "Treatment:",
+                    )
+                    if (offset := output.find(marker)) >= 0
+                ]
+                if schema_offsets:
+                    output = output[min(schema_offsets) :]
+                elif "<channel|>" in control_prefix:
+                    output = output[
+                        output.lower().find("<channel|>") + len("<channel|>") :
+                    ].lstrip()
+            # Legacy causal-model prompts ask the model to continue after an
+            # assistant prefill such as "Thought:" or "Final Diagnosis:".
+            # Chat-completions APIs instead return a complete assistant turn,
+            # and often repeat that prefix. Remove one repeated prefix so the
+            # scratchpad does not turn it into "Thought: Thought: ..." on the
+            # next request.
+            if assistant_prefill:
+                stripped_output = output.lstrip()
+                if stripped_output.lower().startswith(assistant_prefill.lower()):
+                    output = stripped_output[len(assistant_prefill) :].lstrip()
         elif self.exllama:
             import torch
             from exllamav2.generator import ExLlamaV2Sampler

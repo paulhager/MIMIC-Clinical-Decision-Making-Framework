@@ -42,6 +42,21 @@ class OpenRouterConfigsTest(unittest.TestCase):
         self.assertEqual(request["reasoning"], {"effort": "low", "exclude": True})
         self.assertEqual(request["max_tokens"], 64)
 
+        gemma = load_config("Gemma4_26B_OpenRouter")
+        self.assertEqual(
+            smoke_request(gemma)["reasoning"],
+            {"enabled": False, "effort": "none", "exclude": True},
+        )
+        self.assertEqual(
+            {
+                key: smoke_request(gemma)[key]
+                for key in ("temperature", "top_p", "top_k")
+            },
+            {"temperature": 1.0, "top_p": 0.95, "top_k": 64},
+        )
+        self.assertEqual(smoke_request(gemma)["max_tokens"], 64)
+        self.assertEqual(gemma["max_output_tokens"], 4096)
+
 
 if __name__ == "__main__":
     unittest.main()

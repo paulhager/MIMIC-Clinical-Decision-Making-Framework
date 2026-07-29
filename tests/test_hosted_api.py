@@ -42,13 +42,18 @@ class HostedChatClientTest(unittest.TestCase):
         create.return_value = {
             "model": "org/model",
             "provider": "Provider",
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {"content": "private response"},
+                }
+            ],
             "usage": {
                 "prompt_tokens": 10,
                 "completion_tokens": 2,
                 "total_tokens": 12,
                 "cost": 0.001,
             },
-            "choices": [{"message": {"content": "private response"}}],
         }
         with tempfile.TemporaryDirectory() as temp_dir:
             usage_log = Path(temp_dir) / "usage.jsonl"
@@ -68,6 +73,8 @@ class HostedChatClientTest(unittest.TestCase):
 
             entry = json.loads(usage_log.read_text())
             self.assertEqual(entry["cost"], 0.001)
+            self.assertEqual(entry["finish_reason"], "stop")
+            self.assertTrue(entry["content_present"])
             self.assertNotIn("private prompt", usage_log.read_text())
             self.assertNotIn("private response", usage_log.read_text())
 

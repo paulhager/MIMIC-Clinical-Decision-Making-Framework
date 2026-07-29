@@ -59,19 +59,25 @@ def smoke_request(config: dict) -> dict:
         ],
         "temperature": 0,
         "seed": 2023,
-        "max_tokens": 64,
+        "max_tokens": (
+            512
+            if (config.get("api_reasoning") or {}).get("enabled")
+            else 64
+        ),
     }
     if config.get("api_reasoning"):
         request["reasoning"] = config["api_reasoning"]
     if config.get("api_provider"):
         request["provider"] = config["api_provider"]
+    if config.get("api_sampling"):
+        request.update(config["api_sampling"])
     return request
 
 
 def run_config(client: HostedChatClient, config_name: str) -> tuple[bool, float]:
     config = load_config(config_name)
     response = client.create(**smoke_request(config))
-    answer = response["choices"][0]["message"]["content"].strip()
+    answer = (response["choices"][0]["message"].get("content") or "").strip()
     metadata = client.response_metadata(response)
     cost = float(metadata.get("cost") or 0)
 
@@ -85,7 +91,7 @@ def run_config(client: HostedChatClient, config_name: str) -> tuple[bool, float]
         f"{metadata.get('total_tokens', '?')} tokens; "
         f"${cost:.8f}"
     )
-    print(f"answer: {answer}")
+    print(f"answer: {answer or '[no final content]'}")
 
     passed = EXPECTED_TERM in answer.lower()
     print(

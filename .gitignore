@@ -6,3 +6,5 @@ __pycache__
 .venv-hosted/
 runtime_data/
 configs/paths/local.yaml
+outputs/
+no_canonical_names.txt

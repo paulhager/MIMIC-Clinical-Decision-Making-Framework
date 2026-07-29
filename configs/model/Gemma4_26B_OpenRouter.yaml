@@ -12,22 +12,36 @@ api_app_name_env: OPENROUTER_APP_NAME
 # OpenRouter model slug for google/gemma-4-26B-A4B-it.
 model_name: google/gemma-4-26b-a4b-it
 max_context_length: 262144
-max_output_tokens: 2048
+# Native thinking shares the completion allowance with visible output. A 4K
+# ceiling avoids empty finals on long clinical records while remaining far
+# below the endpoint's 16K maximum.
+max_output_tokens: 4096
 exllama: False
 
 # Pin one high-uptime endpoint so leaderboard runs are reproducible. Disable
 # provider fallback so a run cannot silently switch inference implementations.
 api_provider:
   order:
-    - deepinfra
+    - novita
   allow_fallbacks: false
   require_parameters: true
   data_collection: deny
   zdr: true
 
-# Keep benchmark responses concise and prevent hidden reasoning-token variance.
+# Full-Information evaluation is one-shot and does not need native thinking.
+# Keep it off to avoid long/empty reasoning completions; the hosted adapter
+# removes the empty thought-channel marker emitted by larger Gemma 4 models.
 api_reasoning:
   enabled: false
+  effort: none
+  exclude: true
+
+# Gemma 4's model card recommends sampled decoding. Greedy decoding can fall
+# into repeated empty thought-channel markers during multi-turn conversations.
+api_sampling:
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 64
 
 # These tags are only used internally to turn legacy prompts into chat messages.
 system_tag_start: "<|im_start|>system"
